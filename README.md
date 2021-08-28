@@ -1,55 +1,80 @@
-# vs
-## If you can continue to use it, please keep a low profile. 
-## Do not promote any website
+> 提醒： 滥用可能导致账户被BAN！！！   
+  
+* 使用[xray](https://github.com/XTLS/Xray-core)+caddy同时部署通过ws传输的vmess vless trojan shadowsocks socks等协议  
+* 支持tor网络，且可通过自定义网络配置文件启动xray和caddy来按需配置各种功能  
+* 支持存储自定义文件,目录及账号密码均为AUUID,客户端务必使用TLS连接  
+  
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://dashboard.heroku.com/new?template=https://github.com/axztk/vless-1)  
+  
+### 服务端
+点击上面紫色`Deploy to Heroku`，会跳转到heroku app创建页面，填上app的名字、选择节点、按需修改部分参数和AUUID后点击下面deploy创建app即可开始部署  
+如出现错误，可以多尝试几次，待部署完成后页面底部会显示Your app was successfully deployed  
+  * 点击Manage App可在Settings下的Config Vars项**查看和重新设置参数**  
+  * 点击Open app跳转[欢迎页面](/etc/CADDYIndexPage.md)域名即为heroku分配域名，格式为`appname.herokuapp.com`，用于客户端  
+  * 默认协议密码为$UUID，WS路径为$UUID-[vmess|vless|trojan|ss|socks]格式
+  
+### 客户端
+* **务必替换所有的appname.herokuapp.com为heroku分配的项目域名**  
+* **务必替换所有的8f91b6a0-e8ee-11ea-adc1-0242ac120002为部署时设置的AUUID**  
+  
+<details>
+<summary>xray</summary>
 
-Deploy vs
-
-Friendly reminder: After fork this project, change heroku deploy address to your own name.
-
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://dashboard.heroku.com/new?template=https://github.com/axztk/vless-1.git)
-
-# VLESS Client Setup
-
-| Connection Variables | Values |
-| -------------------- | ------ |
-| `Address` | yourAppName.herokuapp.com </br> Cloudflare Reverse Proxy IP |
-| `SNI` | none |
-| `AllowInsecure` | false |
-| `Port` | 443 |
-| `Host` | yourAppName.herokuapp.com </br> Cloudflare Reverse Proxy Domain Name |
-| `Path` | /$ID-vless |
-| `id` | Generate using UUID generator or V2RayN/V2RayNG client generate </br> [uuidgenerator](https://www.uuidgenerator.net/) |
-| `Flow` | none |
-| `encryption` | none |
-| `Transport` | ws |
-| `Tls` | Tls must open, otherwise your network was insecure! |
-
-# Client Ws+Tls+Xtls-rprx-direct(Flow) Support Status
-| Client | Status |
-| ------ | ------ |
-| `2dust V2RayN` </br> `2dust V2RayNG` | Ws+Tls+Flow |
-| `OpenWrt SSRPlus` | Ws+Tls |
-| `OpenWrt Passwall` | Ws+Tls |
-| `QV2Ray` | Ws+Tls |
-
-# Cloudflare Reverse Proxy Code (Choose one from both examples)
-
-example 1
+```bash
+* 客户端下载：https://github.com/XTLS/Xray-core/releases
+* 代理协议：vless 或 vmess
+* 地址：appname.herokuapp.com
+* 端口：443
+* 默认UUID：8f91b6a0-e8ee-11ea-adc1-0242ac120002
+* 加密：none
+* 传输协议：ws
+* 伪装类型：none
+* 路径：/8f91b6a0-e8ee-11ea-adc1-0242ac120002-vless // 默认vless使用/$uuid-vless，vmess使用/$uuid-vmess
+* 底层传输安全：tls
 ```
-addEventListener(
-  "fetch", event => {
-    let url = new URL(event.request.url);
-    url.host = "appname.herokuapp.com";
-    let request = new Request(url, event.request);
-    event.respondWith(
-      fetch(request)
-    )
-  }
-)
-```
+</details>
+  
+<details>
+<summary>trojan-go</summary>
 
-example 2 (recommend)
+```bash
+* 客户端下载: https://github.com/p4gefau1t/trojan-go/releases
+{
+    "run_type": "client",
+    "local_addr": "127.0.0.1",
+    "local_port": 1080,
+    "remote_addr": "appname.herokuapp.com",
+    "remote_port": 443,
+    "password": [
+        "8f91b6a0-e8ee-11ea-adc1-0242ac120002"
+    ],
+    "websocket": {
+        "enabled": true,
+        "path": "/8f91b6a0-e8ee-11ea-adc1-0242ac120002-trojan",
+        "host": "appname.herokuapp.com"
+    }
+}
 ```
+</details>
+  
+<details>
+<summary>shadowsocks</summary>
+
+```bash
+* 客户端下载：https://github.com/shadowsocks/shadowsocks-windows/releases/
+* 服务器地址: appname.herokuapp.com
+* 端口: 443
+* 密码：password
+* 加密：chacha20-ietf-poly1305
+* 插件程序：xray-plugin_windows_amd64.exe  //需将插件https://github.com/shadowsocks/xray-plugin/releases下载解压后放至shadowsocks同目录
+* 插件选项: tls;host=appname.herokuapp.com;path=/8f91b6a0-e8ee-11ea-adc1-0242ac120002-ss
+```
+</details>
+  
+<details>
+<summary>cloudflare workers example</summary>
+
+```js
 const SingleDay = 'appname.herokuapp.com'
 const DoubleDay = 'appname.herokuapp.com'
 addEventListener(
@@ -63,7 +88,7 @@ addEventListener(
         }
         
         let url=new URL(event.request.url);
-        url.hostname="appname.herokuapp.com";
+        url.hostname=host;
         let request=new Request(url,event.request);
         event. respondWith(
             fetch(request)
@@ -71,47 +96,6 @@ addEventListener(
     }
 )
 ```
-
-# Caddyindexpage (Welcome to Pull Requests)
-Select the link address you like and copy it as the variable CADDYIndexPage variable value
-| Number | Address |
-| ------ | ------- |
-| 1(default) | [Welcome to caddy page](https://raw.githubusercontent.com/caddyserver/dist/master/welcome/index.html) |
-| 2 | [3DCEList Periodic Table of Elements](https://github.com/wulabing/3DCEList/archive/master.zip) |
-| 3 | [Spotify-Landing-Page-Redesign](https://github.com/WebDevSimplified/Spotify-Landing-Page-Redesign/archive/master.zip) |
-| 4 | [dev-landing-page](https://github.com/flexdinesh/dev-landing-page/archive/master.zip) |
-| 5 | [free-for-dev](https://github.com/ripienaar/free-for-dev/archive/master.zip) |
-| 6 | [tailwindtoolbox-Landing-Page](https://github.com/tailwindtoolbox/Landing-Page/archive/master.zip) |
-| 7 | [sandhikagalih/simple-landing-page](https://github.com/sandhikagalih/simple-landing-page/archive/master.zip) |
-| 8 | [StartBootstrap/startbootstrap-new-age](https://github.com/StartBootstrap/startbootstrap-new-age/archive/master.zip) |
-| 9 | [mikutap A fun page with music](https://github.com/AYJCSGM/mikutap/archive/master.zip) [demo](https://aidn.jp/mikutap) |
-| 10 | [WebGL Fluid simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation/archive/master.zip) [demo](https://paveldogreat.github.io/WebGL-Fluid-Simulation/) |
-| 11 | [loruki-website](https://github.com/bradtraversy/loruki-website/archive/master.zip) |
-| 12 | [bongo.cat A musical cat](https://github.com/Externalizable/bongo.cat/archive/master.zip) [demo](https://bongo.cat/) |
-
-# Acknowledgments
-
-- [Project V](https://github.com/v2fly/v2ray-core.git)
-- [Project X](https://github.com/XTLS/Xray-core.git)
-- [HeroKu](https://heroku.com)
-- [heroku-vless](https://github.com/DanyTPG/heroku-vless.git)
-- [CloudflareSpeedTest](https://github.com/XIU2/CloudflareSpeedTest.git)
-- [Better Cloudflare IP](https://github.com/badafans/better-cloudflare-ip.git)
-
-# Important information
-
-Heroku has started to clean up users who use the v2ray/xray/shadowsocks project, especially if the number of forks is too many and has been advertised on YOUTUBE (please be careful if the number of forks exceeds 100), this project will no longer be updated. If you can continue to use it, please keep a low profile. There are few free resources left. (2021.7.19)
-
-Caddy web server has an abnormal error, caddy web server has been cancelled, please forgive me. (2020.8.16)
-
-New users only need to modify the id and Caddy homepage configuration
-
-Do not modify the caddy configuration if you are not familiar with the caddy configuration
-
-Abuse is strictly prohibited, I am not responsible for all problems arising from abuse, and use and cherish!
-
-This project is not suitable for long-term use over the wall.
-
-For security reasons, please use cdn instead of custom domain names to achieve VLESS+WS+TLS.
-
-It is forbidden to promote this project on any website!!!!
+</details>
+  
+> [更多来自热心网友PR的使用教程](/tutorial)
